@@ -11,7 +11,7 @@ class Parent():
 
 class Child(Parent):
     def __init__(self):
-        Parent.__init__(self)
+        super().__init__()
         self.__c = 3
 
     def show(self):
