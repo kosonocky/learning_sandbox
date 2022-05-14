@@ -13,13 +13,24 @@ import pandas as pd
 
 class ProteinStructures():
     def __init__(self, pdbid_list):
-        self._pdbid_list = [pdbid for pdbid in pdbid_list]
-        self._class_dict = {}
-        self._architecture_dict = {}
-        self._topology_dict = {}
-        self._homologous_superfamily_dict = {}
+        self._pdbid_list = [f'{pdbid}.A' for pdbid in pdbid_list]
+        self._level_0_dict = {}
+        self._level_1_dict = {}
+        self._level_2_dict = {}
+        self._level_3_dict = {}
+        self._structure_classification_translation_dict = {
+            'SCOP_level_0': 'Class',
+            'SCOP_level_1': 'Fold',
+            'SCOP_level_2': 'Superfamily',
+            'SCOP_level_3': 'Family',
+            'CATH_level_0': 'Class',
+            'CATH_level_1': 'Architecture',
+            'CATH_level_2': 'Topology',
+            'CATH_level_3': 'Homologous_Superfamily'
+        }
 
-    def get_cath_info(self):
+    def get_structure_classification_info(self, classification_type="CATH"):
+        self._classification_type = classification_type
         for pdbid in self._pdbid_list:
             try:
                 url = "https://data.rcsb.org/graphql"
@@ -37,64 +48,76 @@ class ProteinStructures():
                         }""" % pdbid
                 r = requests.post(url, json={'query': query})
                 json_data = json.loads(r.text)
-                cath_data = json_data['data']['polymer_entity_instances'][0][
-                    'rcsb_polymer_instance_annotation'][0]['annotation_lineage']
-                cath_found = False
+                structure_classification_found = False
+
                 for i in range(len(json_data['data']['polymer_entity_instances'][0]['rcsb_polymer_instance_annotation'])):
-                    if json_data['data']['polymer_entity_instances'][0]['rcsb_polymer_instance_annotation'][i]['type'] == 'CATH':
-                        self._class_dict.setdefault(
-                            f"Class {cath_data[0]['id']} ({cath_data[0]['name']})", 0)
-                        self._class_dict[
-                            f"Class {cath_data[0]['id']} ({cath_data[0]['name']})"] += 1
-                        self._architecture_dict.setdefault(
-                            f"Architecture {cath_data[1]['id']} ({cath_data[1]['name']})", 0)
-                        self._architecture_dict[
-                            f"Architecture {cath_data[1]['id']} ({cath_data[1]['name']})"] += 1
-                        self._topology_dict.setdefault(
-                            f"Topology {cath_data[2]['id']} ({cath_data[2]['name']})", 0)
-                        self._topology_dict[
-                            f"Topology {cath_data[2]['id']} ({cath_data[2]['name']})"] += 1
-                        self._homologous_superfamily_dict.setdefault(
-                            f"Homologous Superfamily {cath_data[3]['id']} ({cath_data[3]['name']})", 0)
-                        self._homologous_superfamily_dict[
-                            f"Homologous Superfamily {cath_data[3]['id']} ({cath_data[3]['name']})"] += 1
-                        cath_found = True
-                if cath_found == False:
-                    print(f"CATH Hierarchy Data not found for {pdbid}")
+                    if json_data['data']['polymer_entity_instances'][0]['rcsb_polymer_instance_annotation'][i]['type'] == classification_type:
+                        print(
+                            f"{classification_type} Data found for {pdbid}   Analyzing now!")
+                        structure_data = json_data['data']['polymer_entity_instances'][0][
+                            'rcsb_polymer_instance_annotation'][i]['annotation_lineage']
+                        self._level_0_dict.setdefault(
+                            f"{self._structure_classification_translation_dict[f'{classification_type}_level_0']} {structure_data[0]['id']} ({structure_data[0]['name']})", 0)
+                        self._level_0_dict[
+                            f"{self._structure_classification_translation_dict[f'{classification_type}_level_0']} {structure_data[0]['id']} ({structure_data[0]['name']})"] += 1
+                        self._level_1_dict.setdefault(
+                            f"{self._structure_classification_translation_dict[f'{classification_type}_level_1']} {structure_data[1]['id']} ({structure_data[1]['name']})", 0)
+                        self._level_1_dict[
+                            f"{self._structure_classification_translation_dict[f'{classification_type}_level_1']} {structure_data[1]['id']} ({structure_data[1]['name']})"] += 1
+                        self._level_2_dict.setdefault(
+                            f"{self._structure_classification_translation_dict[f'{classification_type}_level_2']} {structure_data[2]['id']} ({structure_data[2]['name']})", 0)
+                        self._level_2_dict[
+                            f"{self._structure_classification_translation_dict[f'{classification_type}_level_2']} {structure_data[2]['id']} ({structure_data[2]['name']})"] += 1
+                        self._level_3_dict.setdefault(
+                            f"{self._structure_classification_translation_dict[f'{classification_type}_level_3']} {structure_data[3]['id']} ({structure_data[3]['name']})", 0)
+                        self._level_3_dict[
+                            f"{self._structure_classification_translation_dict[f'{classification_type}_level_3']} {structure_data[3]['id']} ({structure_data[3]['name']})"] += 1
+                        self._pdbid_list += [
+                            f'{pdbid[:-1]}{chr(ord(pdbid[-1:])+1)}']
+                        structure_classification_found = True
+                if structure_classification_found == False:
+                    print(
+                        f"{classification_type} Data not found for {pdbid}")
             except:
                 print(f"PDBID: {pdbid} does not exist")
 
     def convert_dictionaries_to_dataframes(self):
-        self._class_df = pd.DataFrame.from_dict(
-            data=self._class_dict, orient='index', columns=['Count'])
-        self._architecture_dict = pd.DataFrame.from_dict(
-            data=self._architecture_dict, orient='index', columns=['Count'])
-        self._topology_dict = pd.DataFrame.from_dict(
-            data=self._topology_dict, orient='index', columns=['Count'])
-        self._homologous_superfamily_dict = pd.DataFrame.from_dict(
-            data=self._homologous_superfamily_dict, orient='index', columns=['Count'])
+        self._level_0_df = pd.DataFrame.from_dict(
+            data=self._level_0_dict, orient='index', columns=['Count'])
+        self._level_1_df = pd.DataFrame.from_dict(
+            data=self._level_1_dict, orient='index', columns=['Count'])
+        self._level_2_df = pd.DataFrame.from_dict(
+            data=self._level_2_dict, orient='index', columns=['Count'])
+        self._level_3_df = pd.DataFrame.from_dict(
+            data=self._level_3_dict, orient='index', columns=['Count'])
 
     def convert_dfs_to_percentages(self):
-        grouped_dfs = (self._class_df, self._architecture_dict,
-                       self._topology_dict, self._homologous_superfamily_dict)
+        grouped_dfs = (self._level_0_df, self._level_1_df,
+                       self._level_2_df, self._level_3_df)
         for df in grouped_dfs:
             df['Percentage'] = df['Count'].divide(int(df.sum()))
-            print(df)
+
+    def export_dfs(self):
+        try:
+            grouped_dfs = (self._level_0_df, self._level_1_df,
+                           self._level_2_df, self._level_3_df)
+            for count, df in enumerate(grouped_dfs):
+                df.to_csv(
+                    f'./results/{self._classification_type}_{self._structure_classification_translation_dict[f"{self._classification_type}_level_{count}"]}.csv')
+        except Exception as ex:
+            print(f"Cannot export dataframes to csv | {ex} {ex.args}")
 
 
 def main():
-    example_pdbid_list = ['2BE3.A', '2BE4.A',
-                          '4BN2.A', '4B8Y.A', '5B8A.A', '7C6D.A', '7C2A.A', '2A1A.A', '5AB2.A', '6CE1.A']
+    example_pdbid_list = ['2BE3', '2BE4', '6B2A', '6BN2', '7B1M', '1B4Y', '4Y2N',
+                          '4BN2', '4B8Y', '5B8A', '7C6D', '7C2A', '2A1A', '5AB2', '6CE1', '4B2A', '4B1A']
     proteins = ProteinStructures(example_pdbid_list)
-    proteins.get_cath_info()
+    # print(proteins._pdbid_list)
+    proteins.get_structure_classification_info(
+        classification_type="CATH")
     proteins.convert_dictionaries_to_dataframes()
     proteins.convert_dfs_to_percentages()
-    # print('Counts:', '\n')
-    # print(proteins._class_dict, '\n')
-    # print(proteins._architecture_dict, '\n')
-    # print(proteins._topology_dict, '\n')
-    # print(proteins._homologous_superfamily_dict, '\n')
-    pass
+    proteins.export_dfs()
 
 
 if __name__ == '__main__':
