@@ -9,6 +9,7 @@ import pandas as pd
 # [ ] Add shell arguments
 # [ ] Add parser to pull out pdbids used in training set
 # [ ] Make sure to check all chains in PDBID (ie. starting at A and going through each chain)
+# [ ] Use re and collections libraries instead of current methods for added simplicity
 
 
 class ProteinStructures():
