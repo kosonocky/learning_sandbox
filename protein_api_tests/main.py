@@ -114,7 +114,7 @@ def main():
     proteins = ProteinStructures(example_pdbid_list)
     # print(proteins._pdbid_list)
     proteins.get_structure_classification_info(
-        classification_type="CATH")
+        classification_type="SCOP")
     proteins.convert_dictionaries_to_dataframes()
     proteins.convert_dfs_to_percentages()
     proteins.export_dfs()
