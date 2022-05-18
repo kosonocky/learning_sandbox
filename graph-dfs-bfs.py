@@ -29,13 +29,13 @@ class AirportGraph():
             for destination in destinations:
                 if destination == 'BKK':
                     print('Found it!')
-                    return
+                    # return
                 if destination not in visited:
                     print(destination)
                     visited.add(destination)
                     queue += [destination]
 
-    def dfs(self, start):
+    def dfs_maybe(self, start):
         queue = [start]
         visited = set()
         visited.add(start)
@@ -47,12 +47,22 @@ class AirportGraph():
             for destination in destinations:
                 if destination == 'BKK':
                     print('Found it!')
-                    return
+                    # return
                 if destination not in visited:
                     print(destination)
                     visited.add(destination)
                     queue.insert(i, destination)
                     i += 1
+
+    def dfs_recursive(self, start, visited=set()):
+        visited.add(start)
+        destinations = self._adjacency_list.get(start)
+        for destination in destinations:
+            if destination == 'BKK':
+                print('Found it!')
+            if destination not in visited:
+                print(destination)
+                self.dfs_recursive(destination, visited)
 
 
 def main():
@@ -74,8 +84,10 @@ def main():
     airport_graph.add_edge(routes)
     print("\n***BFS***")
     airport_graph.bfs('PHX')
-    print("\n***DFS***")
-    airport_graph.dfs('PHX')
+    print("\n***DFS?***")
+    airport_graph.dfs_maybe('PHX')
+    print("\n***DFS Recursive***")
+    airport_graph.dfs_recursive('PHX')
 
 
 if __name__ == '__main__':
