@@ -1,3 +1,11 @@
 venv
 __pycache__
 *.pyc
+~/
+dataset/
+*.png
+training_checkpoints/
+*.jpg
+wikiart/
+*.tar.gz
+*.DS_Store
