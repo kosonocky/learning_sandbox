@@ -9,3 +9,4 @@ training_checkpoints/
 wikiart/
 *.tar.gz
 *.DS_Store
+data/
